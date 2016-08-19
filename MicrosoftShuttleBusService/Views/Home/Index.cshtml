@@ -169,6 +169,7 @@
         });
 
         $("#searchButton").click(function () {
+            clearMap();
             //$("#searchDiv").css("display", "none");
             //$("#routeDetailDiv").css("display", "");
             //$("#sourceInput").val($("#searchForInput").val());
@@ -202,6 +203,7 @@
         $("#returnFromGpsViewerButton").click(function () {
             $("#searchDiv").css("display", "");
             $("#viewGpsDiv").css("display", "none");
+            clearMap();
             redrawMarkersInBaiduMap(map);
         });
 
@@ -218,6 +220,7 @@
             $("#searchDiv").css("display", "");
             $("#routeDetailDiv").css("display", "none");
             $("#newSiteDiv").css("display", "none");
+            clearMap();
             redrawMarkersInBaiduMap(map);
         });
 
@@ -225,6 +228,7 @@
             $("#searchDiv").css("display", "");
             $("#routeDetailDiv").css("display", "none");
             $("#newSiteDiv").css("display", "none");
+            clearMap();
             redrawMarkersInBaiduMap(map);
         });
 
@@ -709,10 +713,13 @@
     var data = readGpsCsv();
     var index = 0;
     var marker = new BMap.Marker();
+    var timeoutIds = [];
     function showGPS(routeId, isInCallBack) {
         isInCallBack = arguments[1] ? arguments[1] : false;
         if (index == 0 || !isInCallBack) {
             index = 0;
+            map.clearOverlays();
+            map.clearHotspots();
             map.reset();
             deleteMarkersInBaiduMap(map);
             //draw the route
@@ -728,7 +735,7 @@
             var middleWayPoints = new Array();
             for (var i = 1; i < route.length - 1; i++)
                 middleWayPoints[i - 1] = new BMap.Point(route[i].LocX, route[i].LocY);
-            
+
             var driving = new BMap.DrivingRoute(map, { renderOptions: { map: map, autoViewport: true } });
             driving.search(p1, p2, { waypoints: middleWayPoints });//waypoints表示途经点
         }
@@ -740,11 +747,27 @@
         //if (index % 3 == 0)
         //    map.centerAndZoom(point, 16);
         index = index + 1;
-        if (index < data.length)
-            setTimeout(function () { showGPS(routeId, true); }, 1000);
-        else
+        if (index < data.length) {
+            var id = setTimeout(function () { showGPS(routeId, true); }, 1000);
+            timeoutIds.push(id);
+        }
+        else{
             index = 0;
+        }
 
+    }
+
+    function clearMap() {
+
+        //clear gps
+        for (var i = 0; i < timeoutIds.length; i++) {
+            clearTimeout(timeoutIds[i]);
+        }
+
+        //clear map
+        map.clearHotspots();
+        map.clearOverlays();
+        map.reset();
     }
     //================show GPS end===================//
 
